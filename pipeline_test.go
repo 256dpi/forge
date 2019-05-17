@@ -7,9 +7,9 @@ import (
 )
 
 func TestPipeline(t *testing.T) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Source(1, func(out chan<- Value) {
+	pipeline.Source(1, func(out chan<- Value) {
 		i := 0
 
 		for {
@@ -23,7 +23,7 @@ func TestPipeline(t *testing.T) {
 		}
 	}, 0)
 
-	p.Filter(3, func(in <-chan Value, out chan<- Value) {
+	pipeline.Filter(3, func(in <-chan Value, out chan<- Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -36,11 +36,11 @@ func TestPipeline(t *testing.T) {
 		}
 	}, 0)
 
-	p.Batch(1, 2, nil, 0, 0)
+	pipeline.Batch(1, 2, nil, 0, 0)
 
 	var list [][]Value
 
-	p.Sink(1, func(in <-chan Value) {
+	pipeline.Sink(1, func(in <-chan Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -53,17 +53,17 @@ func TestPipeline(t *testing.T) {
 		}
 	})
 
-	<-p.Done()
+	<-pipeline.Done()
 
 	assert.Equal(t, [][]Value{{42, 42}, {42, 42}, {42, 42}}, list)
 }
 
 func TestPipelineOpen(t *testing.T) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Open(3)
+	pipeline.Open(3)
 
-	p.Filter(1, func(in <-chan Value, out chan<- Value) {
+	pipeline.Filter(1, func(in <-chan Value, out chan<- Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -76,15 +76,15 @@ func TestPipelineOpen(t *testing.T) {
 		}
 	}, 0)
 
-	p.Input() <- 1
-	p.Input() <- 2
-	p.Input() <- 3
-	close(p.Input())
+	pipeline.Input() <- 1
+	pipeline.Input() <- 2
+	pipeline.Input() <- 3
+	close(pipeline.Input())
 
-	v1 := <-p.Output()
-	v2 := <-p.Output()
-	v3 := <-p.Output()
-	<-p.Done()
+	v1 := <-pipeline.Output()
+	v2 := <-pipeline.Output()
+	v3 := <-pipeline.Output()
+	<-pipeline.Done()
 
 	assert.Equal(t, 2, v1)
 	assert.Equal(t, 4, v2)
@@ -92,33 +92,33 @@ func TestPipelineOpen(t *testing.T) {
 }
 
 func TestPipelineFunc(t *testing.T) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Open(3)
+	pipeline.Open(3)
 
-	p.FilterFunc(1, func(v Value, out chan<- Value) {
+	pipeline.FilterFunc(1, func(v Value, out chan<- Value) {
 		out <- v.(int) * 2
 	}, 0)
 
 	var list []int
-	p.SinkFunc(1, func(v Value) {
+	pipeline.SinkFunc(1, func(v Value) {
 		list = append(list, v.(int))
 	})
 
-	p.Input() <- 1
-	p.Input() <- 2
-	p.Input() <- 3
-	close(p.Input())
+	pipeline.Input() <- 1
+	pipeline.Input() <- 2
+	pipeline.Input() <- 3
+	close(pipeline.Input())
 
-	<-p.Done()
+	<-pipeline.Done()
 
 	assert.Equal(t, []int{2, 4, 6}, list)
 }
 
 func BenchmarkPipelineSingle(b *testing.B) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Source(1, func(out chan<- Value) {
+	pipeline.Source(1, func(out chan<- Value) {
 		i := 0
 		for {
 			i++
@@ -129,7 +129,7 @@ func BenchmarkPipelineSingle(b *testing.B) {
 		}
 	}, 0)
 
-	p.Filter(1, func(in <-chan Value, out chan<- Value) {
+	pipeline.Filter(1, func(in <-chan Value, out chan<- Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -142,9 +142,9 @@ func BenchmarkPipelineSingle(b *testing.B) {
 		}
 	}, 0)
 
-	p.Batch(1, 2, nil, 0, 0)
+	pipeline.Batch(1, 2, nil, 0, 0)
 
-	p.Sink(1, func(in <-chan Value) {
+	pipeline.Sink(1, func(in <-chan Value) {
 		for {
 			select {
 			case _, ok := <-in:
@@ -155,13 +155,13 @@ func BenchmarkPipelineSingle(b *testing.B) {
 		}
 	})
 
-	<-p.Done()
+	<-pipeline.Done()
 }
 
 func BenchmarkPipelineDistributed(b *testing.B) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Source(1, func(out chan<- Value) {
+	pipeline.Source(1, func(out chan<- Value) {
 		i := 0
 		for {
 			i++
@@ -172,7 +172,7 @@ func BenchmarkPipelineDistributed(b *testing.B) {
 		}
 	}, 0)
 
-	p.Filter(10, func(in <-chan Value, out chan<- Value) {
+	pipeline.Filter(10, func(in <-chan Value, out chan<- Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -185,9 +185,9 @@ func BenchmarkPipelineDistributed(b *testing.B) {
 		}
 	}, 0)
 
-	p.Batch(10, 2, nil, 0, 0)
+	pipeline.Batch(10, 2, nil, 0, 0)
 
-	p.Sink(10, func(in <-chan Value) {
+	pipeline.Sink(10, func(in <-chan Value) {
 		for {
 			select {
 			case _, ok := <-in:
@@ -198,13 +198,13 @@ func BenchmarkPipelineDistributed(b *testing.B) {
 		}
 	})
 
-	<-p.Done()
+	<-pipeline.Done()
 }
 
 func BenchmarkPipelineBuffered(b *testing.B) {
-	p := Pipeline{}
+	pipeline := Pipeline{}
 
-	p.Source(1, func(out chan<- Value) {
+	pipeline.Source(1, func(out chan<- Value) {
 		i := 0
 		for {
 			i++
@@ -215,7 +215,7 @@ func BenchmarkPipelineBuffered(b *testing.B) {
 		}
 	}, 1000)
 
-	p.Filter(3, func(in <-chan Value, out chan<- Value) {
+	pipeline.Filter(3, func(in <-chan Value, out chan<- Value) {
 		for {
 			select {
 			case v, ok := <-in:
@@ -228,9 +228,9 @@ func BenchmarkPipelineBuffered(b *testing.B) {
 		}
 	}, 1000)
 
-	p.Batch(1, 2, nil, 0, 1000)
+	pipeline.Batch(1, 2, nil, 0, 1000)
 
-	p.Sink(1, func(in <-chan Value) {
+	pipeline.Sink(1, func(in <-chan Value) {
 		for {
 			select {
 			case _, ok := <-in:
@@ -241,5 +241,5 @@ func BenchmarkPipelineBuffered(b *testing.B) {
 		}
 	})
 
-	<-p.Done()
+	<-pipeline.Done()
 }

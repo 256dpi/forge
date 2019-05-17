@@ -10,15 +10,15 @@ import (
 func TestReporter(t *testing.T) {
 	errTest := errors.New("test")
 
-	r := Reporter{}
+	reporter := Reporter{}
 
 	var e error
-	r.Report(func(err error) {
+	reporter.Report(func(err error) {
 		e = err
 	})
 
 	i := 0
-	r.Repeat(func() error {
+	reporter.Repeat(func() error {
 		i++
 		if i == 2 {
 			return ErrDone
@@ -33,10 +33,10 @@ func TestReporter(t *testing.T) {
 func TestReporterMissing(t *testing.T) {
 	errTest := errors.New("test")
 
-	r := Reporter{}
+	reporter := Reporter{}
 
 	assert.PanicsWithValue(t, "missing reporter", func() {
-		r.Repeat(func() error {
+		reporter.Repeat(func() error {
 			return errTest
 		})
 	})

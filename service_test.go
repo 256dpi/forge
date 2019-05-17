@@ -9,15 +9,15 @@ import (
 )
 
 func TestServiceRunAndReporter(t *testing.T) {
-	s := Service{}
+	service := Service{}
 
 	var err error
-	s.Report(func(e error) {
+	service.Report(func(e error) {
 		err = e
 	})
 
 	i := 0
-	s.Run(1, func() error {
+	service.Run(1, func() error {
 		i++
 		if i == 2 {
 			return ErrDone
@@ -25,19 +25,19 @@ func TestServiceRunAndReporter(t *testing.T) {
 		return errors.New("foo")
 	}, nil)
 
-	<-s.Done()
+	<-service.Done()
 
 	assert.Equal(t, 2, i)
 	assert.Error(t, err)
 }
 
 func TestServicePipeline(t *testing.T) {
-	s := &Service{}
+	service := &Service{}
 
-	s.Report(func(error) {})
+	service.Report(func(error) {})
 
 	i := 0
-	s.Source(1, func(values chan<- Value) error {
+	service.Source(1, func(values chan<- Value) error {
 		i++
 		if i == 4 {
 			return ErrDone
@@ -46,64 +46,64 @@ func TestServicePipeline(t *testing.T) {
 		return nil
 	}, 1)
 
-	s.Batch(1, 1, time.Millisecond, 1)
+	service.Batch(1, 1, time.Millisecond, 1)
 
-	s.FilterFunc(1, func(v Value, out chan<- Value) error {
+	service.FilterFunc(1, func(v Value, out chan<- Value) error {
 		out <- v
 		return nil
 	}, 1)
 
 	var out []Value
-	s.SinkFunc(1, func(v Value) error {
+	service.SinkFunc(1, func(v Value) error {
 		out = append(out, v)
 		return nil
 	})
 
-	<-s.Done()
+	<-service.Done()
 
 	assert.Equal(t, []Value{[]Value{1}, []Value{2}, []Value{3}}, out)
 }
 
 func TestServiceSendAndStop(t *testing.T) {
-	s := &Service{}
+	service := &Service{}
 
-	s.Report(func(error) {})
+	service.Report(func(error) {})
 
-	s.Open(0)
+	service.Open(0)
 
-	var ret1 []string
-	s.Sink(1, func(in <-chan Value) error {
+	var out1 []string
+	service.Sink(1, func(in <-chan Value) error {
 		for {
 			select {
 			case _, ok := <-in:
 				if !ok {
-					ret1 = append(ret1, "done")
+					out1 = append(out1, "done")
 					return ErrDone
 				}
 
-				ret1 = append(ret1, "ok")
+				out1 = append(out1, "ok")
 				time.Sleep(10 * time.Millisecond)
 			}
 		}
 	})
 
-	var ret2 []string
+	var out2 []string
 	go func() {
 		for i := 1; i <= 5; i++ {
-			err := s.Send(i)
+			err := service.Send(i)
 			if err != nil {
-				ret2 = append(ret2, "error")
+				out2 = append(out2, "error")
 			} else {
-				ret2 = append(ret2, "ok")
+				out2 = append(out2, "ok")
 			}
 		}
 	}()
 
 	time.Sleep(25 * time.Millisecond)
-	s.Stop()
-	<-s.Done()
+	service.Stop()
+	<-service.Done()
 
-	assert.Equal(t, []string{"ok", "ok", "ok", "done"}, ret1)
-	assert.Equal(t, []string{"ok", "ok", "ok", "error", "error"}, ret2)
-	assert.Equal(t, ErrStopped, s.Status())
+	assert.Equal(t, []string{"ok", "ok", "ok", "done"}, out1)
+	assert.Equal(t, []string{"ok", "ok", "ok", "error", "error"}, out2)
+	assert.Equal(t, ErrStopped, service.Status())
 }

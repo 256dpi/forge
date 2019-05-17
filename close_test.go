@@ -6,43 +6,43 @@ import (
 )
 
 func TestClose(t *testing.T) {
-	s1 := &Service{}
-	s1.Report(func(error) {})
-	s1.Run(1, func() error {
+	service1 := &Service{}
+	service1.Report(func(error) {})
+	service1.Run(1, func() error {
 		return ErrDone
 	}, nil)
 
-	s2 := &Service{}
-	s2.Report(func(error) {})
-	s2.Run(1, func() error {
+	service2 := &Service{}
+	service2.Report(func(error) {})
+	service2.Run(1, func() error {
 		return ErrDone
 	}, nil)
 
-	Close(time.Millisecond, time.Millisecond, s1, s2)
+	Close(time.Millisecond, time.Millisecond, service1, service2)
 }
 
 func TestCloseStopTimeout(t *testing.T) {
-	s1 := &Service{}
-	s1.Report(func(error) {})
-	s1.Run(1, func() error {
-		<-s1.Killed()
+	service := &Service{}
+	service.Report(func(error) {})
+	service.Run(1, func() error {
+		<-service.Killed()
 		return ErrDone
 	}, nil)
 
-	Close(time.Millisecond, time.Millisecond, s1)
+	Close(time.Millisecond, time.Millisecond, service)
 }
 
 func TestCloseKillTimeout(t *testing.T) {
 	done := make(chan Signal)
 
-	s1 := &Service{}
-	s1.Report(func(error) {})
-	s1.Run(1, func() error {
+	service := &Service{}
+	service.Report(func(error) {})
+	service.Run(1, func() error {
 		<-done
 		return ErrDone
 	}, nil)
 
-	Close(time.Millisecond, time.Millisecond, s1)
+	Close(time.Millisecond, time.Millisecond, service)
 
 	close(done)
 }

@@ -7,30 +7,30 @@ import (
 )
 
 func TestManager(t *testing.T) {
-	s := Manager{}
+	manager := Manager{}
 
 	start := 0
 	stop := 0
 
-	s.Run(3, func() {
+	manager.Run(3, func() {
 		start++
 	}, func() {
 		stop++
 	})
 
-	assert.False(t, s.Finished())
-	<-s.Done()
-	assert.True(t, s.Finished())
+	assert.False(t, manager.Finished())
+	<-manager.Done()
+	assert.True(t, manager.Finished())
 
-	s.Run(3, func() {
+	manager.Run(3, func() {
 		start++
 	}, func() {
 		stop++
 	})
 
-	assert.False(t, s.Finished())
-	<-s.Done()
-	assert.True(t, s.Finished())
+	assert.False(t, manager.Finished())
+	<-manager.Done()
+	assert.True(t, manager.Finished())
 
 	assert.Equal(t, 6, start)
 	assert.Equal(t, 2, stop)
