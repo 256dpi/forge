@@ -5,11 +5,11 @@ import (
 	"time"
 )
 
-// Service wraps Pipeline with a Closer and Reporter.
+// Service wraps Pipeline with a Terminator and Reporter.
 type Service struct {
-	Reporter
 	Pipeline
-	Supervisor
+	Terminator
+	Reporter
 
 	mutex sync.Mutex
 	once  sync.Once
@@ -123,11 +123,11 @@ func (s *Service) SinkFunc(n int, fn func(Value) error) {
 	})
 }
 
-// Stop will stop the supervisor and close the input channel if the pipeline has
+// Stop will stop the Terminator and close the input channel if the Pipeline has
 // been opened.
 func (s *Service) Stop() {
 	// forward call (will unblock blocked Send calls)
-	s.Supervisor.Stop()
+	s.Terminator.Stop()
 
 	// acquire mutex
 	s.mutex.Lock()

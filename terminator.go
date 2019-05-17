@@ -5,14 +5,14 @@ import (
 	"sync"
 )
 
-// ErrStopped indicates that a supervisor has been stopped.
+// ErrStopped indicates that a Terminator has been stopped.
 var ErrStopped = errors.New("stopped")
 
-// ErrKilled indicates that a supervisor has been killed.
+// ErrKilled indicates that a Terminator has been killed.
 var ErrKilled = errors.New("killed")
 
-// A Supervisor manages provides a stopping and killing mechanism.
-type Supervisor struct {
+// Terminator provides a stopping and killing mechanism.
+type Terminator struct {
 	stopping chan Signal
 	killed   chan Signal
 	onceInit sync.Once
@@ -20,7 +20,7 @@ type Supervisor struct {
 	onceKill sync.Once
 }
 
-func (s *Supervisor) init() {
+func (s *Terminator) init() {
 	// create the channels once
 	s.onceInit.Do(func() {
 		s.stopping = make(chan Signal)
@@ -29,7 +29,7 @@ func (s *Supervisor) init() {
 }
 
 // Stop will close the Stopping channel.
-func (s *Supervisor) Stop() {
+func (s *Terminator) Stop() {
 	s.init()
 
 	// close channel once
@@ -39,14 +39,14 @@ func (s *Supervisor) Stop() {
 }
 
 // Stopping returns the channel closed by Stop.
-func (s *Supervisor) Stopping() <-chan Signal {
+func (s *Terminator) Stopping() <-chan Signal {
 	s.init()
 
 	return s.stopping
 }
 
 // IsStopping returns whether Stop has been called.
-func (s *Supervisor) IsStopping() bool {
+func (s *Terminator) IsStopping() bool {
 	select {
 	case <-s.stopping:
 		return true
@@ -56,7 +56,7 @@ func (s *Supervisor) IsStopping() bool {
 }
 
 // Kill will close the Stopping and Killed channel.
-func (s *Supervisor) Kill() {
+func (s *Terminator) Kill() {
 	s.init()
 
 	// close channel once
@@ -71,14 +71,14 @@ func (s *Supervisor) Kill() {
 }
 
 // Killed returns the channel closed by Kill.
-func (s *Supervisor) Killed() <-chan Signal {
+func (s *Terminator) Killed() <-chan Signal {
 	s.init()
 
 	return s.killed
 }
 
 // IsKilled returns whether Kill has been called.
-func (s *Supervisor) IsKilled() bool {
+func (s *Terminator) IsKilled() bool {
 	select {
 	case <-s.killed:
 		return true
@@ -88,7 +88,7 @@ func (s *Supervisor) IsKilled() bool {
 }
 
 // Status returns and error if Stop or Kill have been called.
-func (s *Supervisor) Status() error {
+func (s *Terminator) Status() error {
 	if s.IsKilled() {
 		return ErrKilled
 	} else if s.IsStopping() {
