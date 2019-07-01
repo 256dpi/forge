@@ -14,11 +14,14 @@ import "time"
 // may be lost in this scenario.
 func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size int, timeout time.Duration) {
 	// prepare slice
-	var slice []Value
+	slice := make([]Value, 0, size)
 
 	// prepare timer
 	var timer *time.Timer
 	var trigger <-chan time.Time
+
+	// prepare counter
+	var counter int
 
 	for {
 		select {
@@ -42,13 +45,9 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 				return
 			}
 
-			// create slice if nil
-			if slice == nil {
-				slice = make([]Value, 0, size)
-			}
-
 			// add value
 			slice = append(slice, value)
+			counter++
 
 			// set timer if missing
 			if timer == nil && timeout > 0 {
@@ -57,15 +56,16 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 			}
 
 			// check if slice is full
-			if len(slice) == size {
+			if counter >= size {
 				// send slice
 				select {
 				case sink <- slice:
 				case <-cancel:
 				}
 
-				// make new slice
+				// reset slice
 				slice = make([]Value, 0, size)
+				counter = 0
 
 				// reset timer if available
 				if timer != nil {
@@ -82,7 +82,8 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 			}
 
 			// reset slice
-			slice = nil
+			slice = make([]Value, 0, size)
+			counter = 0
 
 			// reset timer
 			timer.Stop()
