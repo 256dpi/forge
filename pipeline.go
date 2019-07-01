@@ -79,7 +79,7 @@ func (p *Pipeline) FilterFunc(n int, fn func(Value, chan<- Value), buffer int) {
 }
 
 // Batch is an intermediary task that batches values up.
-func (p *Pipeline) Batch(n int, size int, stop <-chan Signal, timeout time.Duration, buffer int) {
+func (p *Pipeline) Batch(n int, sizer func(Value) int, limit int, stop <-chan Signal, timeout time.Duration, buffer int) {
 	if p.source == nil {
 		panic("missing source")
 	}
@@ -88,7 +88,7 @@ func (p *Pipeline) Batch(n int, size int, stop <-chan Signal, timeout time.Durat
 	out := make(chan Value, buffer)
 
 	p.Run(n, func() {
-		Batch(in, out, stop, size, timeout)
+		Batch(in, out, stop, sizer, limit, timeout)
 	}, func() {
 		close(out)
 	})

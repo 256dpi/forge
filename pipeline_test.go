@@ -36,7 +36,7 @@ func TestPipeline(t *testing.T) {
 		}
 	}, 0)
 
-	pipeline.Batch(1, 2, nil, 0, 0)
+	pipeline.Batch(1, nil, 2, nil, 0, 0)
 
 	var list [][]Value
 
@@ -142,7 +142,7 @@ func BenchmarkPipelineSingle(b *testing.B) {
 		}
 	}, 0)
 
-	pipeline.Batch(1, 2, nil, 0, 0)
+	pipeline.Batch(1, nil, 2, nil, 0, 0)
 
 	pipeline.Sink(1, func(in <-chan Value) {
 		for {
@@ -185,7 +185,7 @@ func BenchmarkPipelineDistributed(b *testing.B) {
 		}
 	}, 0)
 
-	pipeline.Batch(10, 2, nil, 0, 0)
+	pipeline.Batch(10, nil, 2, nil, 0, 0)
 
 	pipeline.Sink(10, func(in <-chan Value) {
 		for {
@@ -228,7 +228,7 @@ func BenchmarkPipelineBuffered(b *testing.B) {
 		}
 	}, 1000)
 
-	pipeline.Batch(1, 2, nil, 0, 1000)
+	pipeline.Batch(1, nil, 2, nil, 0, 1000)
 
 	pipeline.Sink(1, func(in <-chan Value) {
 		for {

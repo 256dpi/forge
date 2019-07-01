@@ -3,7 +3,9 @@ package forge
 import "time"
 
 // Batch will read values from the source channel and batch them in slices up
-// to the specified size and sends them on the sink channel.
+// to the specified limit and sends them on the sink channel. It will use the
+// specified sizer function to determine the "size" of the value. If no sizer
+// is specified it will default to increment the counter by one.
 //
 // It will finish batches within the specified timeout.
 //
@@ -12,9 +14,9 @@ import "time"
 //
 // If the cancel channel is closed the function will return immediately. Data
 // may be lost in this scenario.
-func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size int, timeout time.Duration) {
+func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, sizer func(Value) int, limit int, timeout time.Duration) {
 	// prepare slice
-	slice := make([]Value, 0, size)
+	var slice []Value
 
 	// prepare timer
 	var timer *time.Timer
@@ -47,7 +49,13 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 
 			// add value
 			slice = append(slice, value)
-			counter++
+
+			// increment counter
+			if sizer != nil {
+				counter += sizer(value)
+			} else {
+				counter++
+			}
 
 			// set timer if missing
 			if timer == nil && timeout > 0 {
@@ -56,7 +64,7 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 			}
 
 			// check if slice is full
-			if counter >= size {
+			if counter >= limit {
 				// send slice
 				select {
 				case sink <- slice:
@@ -64,7 +72,7 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 				}
 
 				// reset slice
-				slice = make([]Value, 0, size)
+				slice = nil
 				counter = 0
 
 				// reset timer if available
@@ -82,7 +90,7 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, size in
 			}
 
 			// reset slice
-			slice = make([]Value, 0, size)
+			slice = nil
 			counter = 0
 
 			// reset timer

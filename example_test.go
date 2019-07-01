@@ -22,7 +22,7 @@ func Example() {
 		return nil
 	}, 1)
 
-	service.Batch(1, 3, time.Millisecond, 1)
+	service.Batch(1, nil, 3, time.Millisecond, 1)
 
 	service.FilterFunc(1, func(v Value, out chan<- Value) error {
 		out <- v

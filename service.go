@@ -87,8 +87,8 @@ func (s *Service) FilterFunc(n int, fn func(Value, chan<- Value) error, buffer i
 }
 
 // Batch is an intermediary task that batches values up.
-func (s *Service) Batch(n int, size int, timeout time.Duration, buffer int) {
-	s.Pipeline.Batch(n, size, s.Killed(), timeout, buffer)
+func (s *Service) Batch(n int, sizer func(Value) int, limit int, timeout time.Duration, buffer int) {
+	s.Pipeline.Batch(n, sizer, limit, s.Killed(), timeout, buffer)
 }
 
 // Sink is the final task that receives all processed values.

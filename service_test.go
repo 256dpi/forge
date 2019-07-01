@@ -46,7 +46,7 @@ func TestServicePipeline(t *testing.T) {
 		return nil
 	}, 1)
 
-	service.Batch(1, 1, time.Millisecond, 1)
+	service.Batch(1, nil, 1, time.Millisecond, 1)
 
 	service.FilterFunc(1, func(v Value, out chan<- Value) error {
 		out <- v

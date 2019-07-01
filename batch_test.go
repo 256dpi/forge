@@ -12,7 +12,7 @@ func TestBatch(t *testing.T) {
 	out := make(chan Value)
 
 	go func() {
-		Batch(in, out, nil, 3, 0)
+		Batch(in, out, nil, nil, 3, 0)
 		close(out)
 	}()
 
@@ -37,7 +37,7 @@ func TestBatchTimeout(t *testing.T) {
 	out := make(chan Value)
 
 	go func() {
-		Batch(in, out, nil, 3, 3*time.Millisecond)
+		Batch(in, out, nil, nil, 3, 3*time.Millisecond)
 		close(out)
 	}()
 
@@ -64,7 +64,7 @@ func TestBatchCancel(t *testing.T) {
 	cancel := make(chan Signal)
 
 	go func() {
-		Batch(in, out, cancel, 3, 0)
+		Batch(in, out, cancel, nil, 3, 0)
 		close(out)
 	}()
 
@@ -90,7 +90,7 @@ func BenchmarkBatch(b *testing.B) {
 	in := make(chan Value, size)
 	out := make(chan Value, b.N/size+1)
 
-	go Batch(in, out, nil, size, 0)
+	go Batch(in, out, nil, nil, size, 0)
 
 	for i := 0; i < b.N; i++ {
 		in <- i
@@ -105,7 +105,7 @@ func BenchmarkBatchTimeout(b *testing.B) {
 	in := make(chan Value, size)
 	out := make(chan Value, b.N/size+1)
 
-	go Batch(in, out, nil, size, time.Second)
+	go Batch(in, out, nil, nil, size, time.Second)
 
 	for i := 0; i < b.N; i++ {
 		in <- i
