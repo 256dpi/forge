@@ -4,16 +4,13 @@ import "time"
 
 // Batch will read values from the source channel and batch them in slices up
 // to the specified limit and sends them on the sink channel. It will use the
-// specified sizer function to determine the "size" of the value. If no sizer
-// is specified it will default to increment the counter by one.
-//
-// It will finish batches within the specified timeout.
+// specified sizer function to determine the size of the value. If no sizer
+// is specified it will default to a size of one per value. Batches are
+// guaranteed to be finished within the specified timeout.
 //
 // If the source channel is closed the function will send the remaining batch
-// and return.
-//
-// If the cancel channel is closed the function will return immediately. Data
-// may be lost in this scenario.
+// and return. If the cancel channel is closed the function will return
+// immediately and data may be lost.
 func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, sizer func(Value) int, limit int, timeout time.Duration) {
 	// prepare slice
 	var slice []Value
