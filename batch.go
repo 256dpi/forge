@@ -47,23 +47,35 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, sizer f
 				return
 			}
 
+			// get value size
+			size := 1
+			if sizer != nil {
+				size = sizer(value)
+			}
+
+			// send slice if not enough space
+			if counter > 0 && counter+size > limit {
+				// send slice
+				select {
+				case sink <- slice:
+				case <-cancel:
+				}
+
+				// reset slice
+				slice = nil
+				counter = 0
+
+				// reset timer if available
+				if timer != nil {
+					timer.Reset(timeout)
+				}
+			}
+
 			// add value
 			slice = append(slice, value)
+			counter += size
 
-			// increment counter
-			if sizer != nil {
-				counter += sizer(value)
-			} else {
-				counter++
-			}
-
-			// set timer if missing
-			if timer == nil && timeout > 0 {
-				timer = time.NewTimer(timeout)
-				trigger = timer.C
-			}
-
-			// check if slice is full
+			// send slice if already full
 			if counter >= limit {
 				// send slice
 				select {
@@ -81,6 +93,14 @@ func Batch(source <-chan Value, sink chan<- Value, cancel <-chan Signal, sizer f
 					timer = nil
 					trigger = nil
 				}
+
+				continue
+			}
+
+			// set timer if missing
+			if timer == nil && timeout > 0 {
+				timer = time.NewTimer(timeout)
+				trigger = timer.C
 			}
 		case <-trigger:
 			// send slice
