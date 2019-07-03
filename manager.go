@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-// A Manager manages multiple running tasks.
+// A Manager manages multiple finite running tasks.
 type Manager struct {
 	done  chan struct{}
 	mutex sync.Mutex
