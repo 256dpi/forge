@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestServiceRunAndReport(t *testing.T) {
+func TestService(t *testing.T) {
 	service := Service{}
 
 	var err error
@@ -22,9 +22,13 @@ func TestServiceRunAndReport(t *testing.T) {
 			return ErrDone
 		}
 		return errors.New("foo")
-	}, nil)
+	}, service.Stop)
 
+	<-service.Stopping()
 	<-service.Done()
+
+	service.Kill()
+	<-service.Killed()
 
 	assert.Equal(t, 2, i)
 	assert.Error(t, err)
