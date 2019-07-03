@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/release/256dpi/forge.svg)](https://github.com/256dpi/forge/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/256dpi/forge)](https://goreportcard.com/report/github.com/256dpi/forge)
 
-**A toolkit for building task pipelines in Go.**
+**A toolkit for managing long-running tasks in Go.**
 
 ## Example
 
