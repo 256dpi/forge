@@ -7,21 +7,24 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var testErr = errors.New("tes")
+
 func TestService(t *testing.T) {
 	service := Service{}
 
-	var err error
-	service.Report(func(e error) {
-		err = e
+	var errs []error
+	service.Report(func(err error) {
+		errs = append(errs, err)
 	})
 
 	i := 0
 	service.Run(1, func() error {
 		i++
-		if i == 2 {
+		if i == 3 {
 			return ErrDone
 		}
-		return errors.New("foo")
+
+		return testErr
 	}, service.Stop)
 
 	<-service.Stopping()
@@ -30,6 +33,6 @@ func TestService(t *testing.T) {
 	service.Kill()
 	<-service.Killed()
 
-	assert.Equal(t, 2, i)
-	assert.Error(t, err)
+	assert.Equal(t, 3, i)
+	assert.Equal(t, []error{testErr, testErr}, errs)
 }
