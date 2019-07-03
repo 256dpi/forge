@@ -9,6 +9,11 @@ import (
 func TestTerminator(t *testing.T) {
 	terminator := Terminator{}
 
+	notified := make(chan struct{})
+	terminator.Notify(func() {
+		close(notified)
+	})
+
 	done1 := make(chan struct{})
 	done2 := make(chan struct{})
 
@@ -25,6 +30,7 @@ func TestTerminator(t *testing.T) {
 
 	terminator.Stop()
 	<-done1
+	<-notified
 
 	assert.True(t, terminator.IsStopping())
 	assert.False(t, terminator.IsKilled())

@@ -15,9 +15,12 @@ var ErrKilled = errors.New("killed")
 type Terminator struct {
 	stopping chan struct{}
 	killed   chan struct{}
+
 	onceInit sync.Once
 	onceStop sync.Once
 	onceKill sync.Once
+
+	notifiers []func()
 }
 
 func (t *Terminator) init() {
@@ -28,6 +31,15 @@ func (t *Terminator) init() {
 	})
 }
 
+// Notify will store the specified callback and call it once the terminator has
+// been stopped.
+func (t *Terminator) Notify(fn func()) {
+	t.init()
+
+	// add tracker
+	t.notifiers = append(t.notifiers, fn)
+}
+
 // Stop will close the Stopping channel.
 func (t *Terminator) Stop() {
 	t.init()
@@ -35,6 +47,13 @@ func (t *Terminator) Stop() {
 	// close channel once
 	t.onceStop.Do(func() {
 		close(t.stopping)
+
+		// call notifiers
+		go func() {
+			for _, t := range t.notifiers {
+				t()
+			}
+		}()
 	})
 }
 
