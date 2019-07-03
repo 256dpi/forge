@@ -53,7 +53,7 @@ func (m *Manager) Done() <-chan struct{} {
 // Finished will return whether all ran tasks have returned.
 func (m *Manager) Finished() bool {
 	select {
-	case <-m.done:
+	case <-m.Done():
 		return true
 	default:
 		return false
