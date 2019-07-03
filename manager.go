@@ -6,7 +6,7 @@ import (
 
 // A Manager manages multiple running tasks.
 type Manager struct {
-	done  chan Signal
+	done  chan struct{}
 	mutex sync.Mutex
 }
 
@@ -19,7 +19,7 @@ func (m *Manager) Run(n int, task func(), finalizer func()) {
 	previousDone := m.done
 
 	// create new done channel
-	currentDone := make(chan Signal)
+	currentDone := make(chan struct{})
 
 	// run task
 	Run(n, task, func() {
@@ -43,7 +43,7 @@ func (m *Manager) Run(n int, task func(), finalizer func()) {
 
 // Done will return a channel that is closed once all until now started tasks
 // have returned.
-func (m *Manager) Done() <-chan Signal {
+func (m *Manager) Done() <-chan struct{} {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 

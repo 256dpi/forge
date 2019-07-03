@@ -13,8 +13,8 @@ var ErrKilled = errors.New("killed")
 
 // Terminator provides a stopping and killing mechanism.
 type Terminator struct {
-	stopping chan Signal
-	killed   chan Signal
+	stopping chan struct{}
+	killed   chan struct{}
 	onceInit sync.Once
 	onceStop sync.Once
 	onceKill sync.Once
@@ -23,8 +23,8 @@ type Terminator struct {
 func (s *Terminator) init() {
 	// create the channels once
 	s.onceInit.Do(func() {
-		s.stopping = make(chan Signal)
-		s.killed = make(chan Signal)
+		s.stopping = make(chan struct{})
+		s.killed = make(chan struct{})
 	})
 }
 
@@ -39,7 +39,7 @@ func (s *Terminator) Stop() {
 }
 
 // Stopping returns the channel closed by Stop.
-func (s *Terminator) Stopping() <-chan Signal {
+func (s *Terminator) Stopping() <-chan struct{} {
 	s.init()
 
 	return s.stopping
@@ -71,7 +71,7 @@ func (s *Terminator) Kill() {
 }
 
 // Killed returns the channel closed by Kill.
-func (s *Terminator) Killed() <-chan Signal {
+func (s *Terminator) Killed() <-chan struct{} {
 	s.init()
 
 	return s.killed

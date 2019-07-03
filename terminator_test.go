@@ -9,8 +9,8 @@ import (
 func TestTerminator(t *testing.T) {
 	terminator := Terminator{}
 
-	done1 := make(chan Signal)
-	done2 := make(chan Signal)
+	done1 := make(chan struct{})
+	done2 := make(chan struct{})
 
 	go func() {
 		<-terminator.Stopping()
@@ -41,8 +41,8 @@ func TestTerminator(t *testing.T) {
 func TestTerminatorKill(t *testing.T) {
 	terminator := Terminator{}
 
-	done1 := make(chan Signal)
-	done2 := make(chan Signal)
+	done1 := make(chan struct{})
+	done2 := make(chan struct{})
 
 	go func() {
 		<-terminator.Stopping()

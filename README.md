@@ -11,39 +11,41 @@
 ## Example
 
 ```go
-service := &Service{}
+// prepare service
+service := &forge.Service{}
 
+// set reporter
+var errs []error
 service.Report(func(err error) {
-    panic(err.Error())
+    errs = append(errs, err)
 })
 
+// run task
 i := 0
-service.Source(1, func(values chan<- Value) error {
+service.Run(1, func() error {
     i++
-    values <- i
+
     if i == 5 {
-        return ErrDone
+        return forge.ErrDone
     }
-    return nil
-}, 1)
+    if i%2 == 0 {
+        return errors.New("foo")
+    }
 
-service.Batch(1, 3, time.Millisecond, 1)
-
-service.FilterFunc(1, func(v Value, out chan<- Value) error {
-    out <- v
     return nil
-}, 1)
-
-var out []Value
-service.SinkFunc(1, func(v Value) error {
-    out = append(out, v)
-    return nil
+}, func() {
+    fmt.Println("finalize")
 })
 
+// wait for exit
 <-service.Done()
 
-fmt.Printf("%+v\n", out)
+// print output
+fmt.Println(i)
+fmt.Println(errs)
 
 // Output:
-// [[1 2 3] [4 5]]
+// finalize
+// 5
+// [foo foo]
 ```

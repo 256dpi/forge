@@ -4,7 +4,7 @@ import "time"
 
 // Closer is a closable service or struct that embeds a service.
 type Closer interface {
-	Done() <-chan Signal
+	Done() <-chan struct{}
 	Stop()
 	Kill()
 }

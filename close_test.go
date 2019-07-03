@@ -33,7 +33,7 @@ func TestCloseStopTimeout(t *testing.T) {
 }
 
 func TestCloseKillTimeout(t *testing.T) {
-	done := make(chan Signal)
+	done := make(chan struct{})
 
 	service := &Service{}
 	service.Report(func(error) {})
