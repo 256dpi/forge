@@ -20,35 +20,35 @@ type Terminator struct {
 	onceKill sync.Once
 }
 
-func (s *Terminator) init() {
+func (t *Terminator) init() {
 	// create the channels once
-	s.onceInit.Do(func() {
-		s.stopping = make(chan struct{})
-		s.killed = make(chan struct{})
+	t.onceInit.Do(func() {
+		t.stopping = make(chan struct{})
+		t.killed = make(chan struct{})
 	})
 }
 
 // Stop will close the Stopping channel.
-func (s *Terminator) Stop() {
-	s.init()
+func (t *Terminator) Stop() {
+	t.init()
 
 	// close channel once
-	s.onceStop.Do(func() {
-		close(s.stopping)
+	t.onceStop.Do(func() {
+		close(t.stopping)
 	})
 }
 
 // Stopping returns the channel closed by Stop.
-func (s *Terminator) Stopping() <-chan struct{} {
-	s.init()
+func (t *Terminator) Stopping() <-chan struct{} {
+	t.init()
 
-	return s.stopping
+	return t.stopping
 }
 
 // IsStopping returns whether Stop has been called.
-func (s *Terminator) IsStopping() bool {
+func (t *Terminator) IsStopping() bool {
 	select {
-	case <-s.stopping:
+	case <-t.stopping:
 		return true
 	default:
 		return false
@@ -56,31 +56,31 @@ func (s *Terminator) IsStopping() bool {
 }
 
 // Kill will close the Stopping and Killed channel.
-func (s *Terminator) Kill() {
-	s.init()
+func (t *Terminator) Kill() {
+	t.init()
 
 	// close channel once
-	s.onceStop.Do(func() {
-		close(s.stopping)
+	t.onceStop.Do(func() {
+		close(t.stopping)
 	})
 
 	// close channel once
-	s.onceKill.Do(func() {
-		close(s.killed)
+	t.onceKill.Do(func() {
+		close(t.killed)
 	})
 }
 
 // Killed returns the channel closed by Kill.
-func (s *Terminator) Killed() <-chan struct{} {
-	s.init()
+func (t *Terminator) Killed() <-chan struct{} {
+	t.init()
 
-	return s.killed
+	return t.killed
 }
 
 // IsKilled returns whether Kill has been called.
-func (s *Terminator) IsKilled() bool {
+func (t *Terminator) IsKilled() bool {
 	select {
-	case <-s.killed:
+	case <-t.killed:
 		return true
 	default:
 		return false
@@ -88,10 +88,10 @@ func (s *Terminator) IsKilled() bool {
 }
 
 // Status returns and error if Stop or Kill have been called.
-func (s *Terminator) Status() error {
-	if s.IsKilled() {
+func (t *Terminator) Status() error {
+	if t.IsKilled() {
 		return ErrKilled
-	} else if s.IsStopping() {
+	} else if t.IsStopping() {
 		return ErrStopped
 	}
 
